@@ -1,6 +1,8 @@
 <script lang="ts">
   import _ from "lodash";
   import { getRandomColor } from "../utils";
+  import { dndzone, type DndEvent } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
 
   export let percent: number;
   export let playing: boolean;
@@ -17,6 +19,23 @@
   export let y: d3.ScaleLinear<number, number, number>;
   export let settings: FPASettings;
   export let shapes: Shape[];
+
+  // Prepare lines with unique IDs for drag and drop
+  let linesWithIds: (Line & { id: string })[] = [];
+  $: linesWithIds = lines.map((line, idx) => ({
+    ...line,
+    id: `line-${idx}-${line.name || idx}`,
+  }));
+
+  function handleDndConsider(e: CustomEvent<DndEvent<Line & { id: string }>>) {
+    linesWithIds = e.detail.items;
+  }
+
+  function handleDndFinalize(e: CustomEvent<DndEvent<Line & { id: string }>>) {
+    linesWithIds = e.detail.items;
+    // Update the original lines array without the id property
+    lines = linesWithIds.map(({ id, ...line }) => line as Line);
+  }
 
   function createTriangle(): Shape {
     return {
@@ -251,12 +270,21 @@
       </div>
     </div>
 
-    {#each lines as line, idx}
-      <div class="flex flex-col w-full justify-start items-start gap-1">
+    <div
+      use:dndzone={{ items: linesWithIds, flipDurationMs: 200, dropTargetStyle: {} }}
+      on:consider={handleDndConsider}
+      on:finalize={handleDndFinalize}
+      class="flex flex-col w-full justify-start items-start gap-2"
+    >
+    {#each linesWithIds as line, idx (line.id)}
+      <div animate:flip={{ duration: 200 }} class="flex flex-col w-full justify-start items-start gap-1 p-2 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 cursor-move">
         <div class="flex flex-row w-full justify-between">
           <div
             class="font-semibold flex flex-row justify-start items-center gap-2"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width={1.5} stroke="currentColor" class="size-4 text-neutral-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+            </svg>
             <input
               bind:value={line.name}
               placeholder="Path {idx + 1}"
@@ -294,13 +322,11 @@
                 />
               </svg>
             </button>
-            {#if lines.length > 1}
+            {#if linesWithIds.length > 1}
               <button
                 title="Remove Line"
                 on:click={() => {
-                  let _lns = lines;
-                  lines.splice(idx, 1);
-                  lines = _lns;
+                  lines = lines.filter((_, i) => i !== idx);
                 }}
               >
                 <svg
@@ -471,6 +497,7 @@ With tangential heading, the heading follows the direction of the line."
         {/each}
       </div>
     {/each}
+    </div>
     <button
       on:click={() => {
         lines = [
