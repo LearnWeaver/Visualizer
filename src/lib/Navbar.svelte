@@ -70,42 +70,54 @@
       tangential: "setTangentHeadingInterpolation",
     };
 
+    // Generate variable names for all lines
+    const variableNames = lines.map((line, idx) =>
+      line.name ? line.name.replace(/[^a-zA-Z0-9]/g, '') : `line${idx + 1}`
+    );
+
+    // Generate single PathChain declaration line
+    const declarationLine = `public PathChain ${variableNames.join(', ')};`;
+
+    // Generate individual path definitions
+    const pathDefinitions = lines.map((line, idx) => {
+      const variableName = variableNames[idx];
+      return `${variableName} = follower
+            .pathBuilder()
+            .addPath(
+                ${line.controlPoints.length === 0 ? `new BezierLine` : `new BezierCurve`}(${
+                  idx === 0
+                    ? `new Pose(${startPoint.x.toFixed(3)}, ${startPoint.y.toFixed(3)}),`
+                    : `new Pose(${lines[idx - 1].endPoint.x.toFixed(3)}, ${lines[idx - 1].endPoint.y.toFixed(3)}),`
+                }
+                ${
+                  line.controlPoints.length > 0
+                    ? `${line.controlPoints
+                        .map(
+                          (point) =>
+                            `new Pose(${point.x.toFixed(3)}, ${point.y.toFixed(3)})`
+                        )
+                        .join(",\n                ")},`
+                    : ""
+                }
+                new Pose(${line.endPoint.x.toFixed(3)}, ${line.endPoint.y.toFixed(3)})
+                )
+            )
+            .${headingTypeToFunctionName[line.endPoint.heading]}(${
+              line.endPoint.heading === "constant"
+                ? `Math.toRadians(${line.endPoint.degrees})`
+                : line.endPoint.heading === "linear"
+                  ? `Math.toRadians(${line.endPoint.startDeg}), Math.toRadians(${line.endPoint.endDeg})`
+                  : ""
+            })${line.endPoint.reverse ? "\n            .setReversed(true)" : ""}
+            .build();`;
+    }).join("\n\n        ");
+
     let pathsClass = `
     public static class Paths {
-      ${lines.map((line, idx) => {
-          const variableName = line.name ? line.name.replace(/[^a-zA-Z0-9]/g, '') : `line${idx + 1}`;
-          return `public PathChain ${variableName};`
-                              }
-                      ).join("\n")
-      }
+      ${declarationLine}
+
       public Paths(Follower follower) {
-        ${lines.map((line, idx) => {
-          const variableName = line.name ? line.name.replace(/[^a-zA-Z0-9]/g, '') : `line${idx + 1}`;
-          return `${variableName} = follower.pathBuilder().addPath(
-          ${line.controlPoints.length === 0 ? `new BezierLine` : `new BezierCurve`}(
-            ${
-                                      idx === 0
-                                              ? `new Pose(${startPoint.x.toFixed(3)}, ${startPoint.y.toFixed(3)}),`
-                                              : `new Pose(${lines[idx - 1].endPoint.x.toFixed(3)}, ${lines[idx - 1].endPoint.y.toFixed(3)}),`
-                              }
-            ${
-                                      line.controlPoints.length > 0
-                                              ? `${line.controlPoints
-                                                      .map(
-                                                              (point) =>
-                                                                      `new Pose(${point.x.toFixed(3)}, ${point.y.toFixed(3)})`
-                                                      )
-                                                      .join(",\n")},`
-                                              : ""
-                              }
-            new Pose(${line.endPoint.x.toFixed(3)}, ${line.endPoint.y.toFixed(3)})
-          )
-        ).${headingTypeToFunctionName[line.endPoint.heading]}(${line.endPoint.heading === "constant" ? `Math.toRadians(${line.endPoint.degrees})` : line.endPoint.heading === "linear" ? `Math.toRadians(${line.endPoint.startDeg}), Math.toRadians(${line.endPoint.endDeg})` : ""})
-        ${line.endPoint.reverse ? ".setReversed(true)" : ""}
-        .build();`
-                              }
-                      )
-                      .join("\n\n")};
+        ${pathDefinitions}
       }
     }
     `;
