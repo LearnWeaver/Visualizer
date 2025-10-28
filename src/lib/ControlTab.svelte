@@ -306,6 +306,7 @@
                     y: _.random(36, 108),
                   },
                 ];
+                lines = lines;
               }}
             >
               <svg
@@ -476,6 +477,7 @@ With tangential heading, the heading follows the direction of the line."
                   let _pts = line.controlPoints;
                   _pts.splice(idx1, 1);
                   line.controlPoints = _pts;
+                  lines = lines;
                 }}
               >
                 <svg
