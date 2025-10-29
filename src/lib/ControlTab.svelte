@@ -299,8 +299,8 @@
             <button
               title="Add Control Point"
               on:click={() => {
-                line.controlPoints = [
-                  ...line.controlPoints,
+                lines[idx].controlPoints = [
+                  ...lines[idx].controlPoints,
                   {
                     x: _.random(36, 108),
                     y: _.random(36, 108),
@@ -474,9 +474,7 @@ With tangential heading, the heading follows the direction of the line."
               <button
                 title="Remove Control Point"
                 on:click={() => {
-                  let _pts = line.controlPoints;
-                  _pts.splice(idx1, 1);
-                  line.controlPoints = _pts;
+                  lines[idx].controlPoints = lines[idx].controlPoints.filter((_, i) => i !== idx1);
                   lines = lines;
                 }}
               >
