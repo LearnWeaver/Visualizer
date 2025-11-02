@@ -20,6 +20,42 @@
   export let settings: FPASettings;
   export let shapes: Shape[];
 
+  // Flip function to mirror paths horizontally
+  function flipPaths() {
+    // Flip start point
+    startPoint.x = 144 - startPoint.x;
+
+    // Mirror heading angle for start point
+    if (startPoint.heading === "linear") {
+      startPoint.startDeg = 180 - startPoint.startDeg;
+      startPoint.endDeg = 180 - startPoint.endDeg;
+    } else if (startPoint.heading === "constant") {
+      startPoint.degrees = 180 - startPoint.degrees;
+    }
+
+    // Flip all lines
+    lines = lines.map(line => ({
+      ...line,
+      endPoint: {
+        ...line.endPoint,
+        x: 144 - line.endPoint.x,
+        // Mirror heading angles
+        ...(line.endPoint.heading === "linear" ? {
+          startDeg: 180 - line.endPoint.startDeg,
+          endDeg: 180 - line.endPoint.endDeg,
+        } : line.endPoint.heading === "constant" ? {
+          degrees: 180 - line.endPoint.degrees,
+        } : {}),
+      },
+      controlPoints: line.controlPoints.map(cp => ({
+        ...cp,
+        x: 144 - cp.x,
+      })),
+    }));
+
+    startPoint = startPoint;
+  }
+
   // Prepare lines with unique IDs for drag and drop
   let linesWithIds: (Line & { id: string })[] = [];
   $: linesWithIds = lines.map((line, idx) => ({
@@ -578,6 +614,26 @@ With tangential heading, the heading follows the direction of the line."
           />
         </svg>
       {/if}
+    </button>
+    <button
+      title="Flip Paths Horizontally"
+      on:click={flipPaths}
+      class="shrink-0"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        class="size-6 stroke-blue-500"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+        />
+      </svg>
     </button>
     <input
       bind:value={percent}
