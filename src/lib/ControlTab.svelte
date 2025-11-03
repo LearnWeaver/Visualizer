@@ -171,6 +171,8 @@
                 bind:value={shape.name}
                 placeholder="Obstacle {shapeIdx + 1}"
                 class="pl-1.5 rounded-md bg-neutral-100 dark:bg-neutral-950 dark:border-neutral-700 border-[0.5px] focus:outline-none text-sm font-medium"
+                on:mousedown={(e) => e.stopPropagation()}
+                on:touchstart={(e) => e.stopPropagation()}
               />
               <div class="size-2 rounded-full bg-red-600"></div>
             </div>
@@ -325,6 +327,8 @@
               bind:value={line.name}
               placeholder="Path {idx + 1}"
               class="pl-1.5 rounded-md bg-neutral-100 dark:bg-neutral-950 dark:border-neutral-700 border-[0.5px] focus:outline-none text-sm font-semibold"
+              on:mousedown={(e) => e.stopPropagation()}
+              on:touchstart={(e) => e.stopPropagation()}
             />
             <div
               class="size-2.5 rounded-full shadow-md"
