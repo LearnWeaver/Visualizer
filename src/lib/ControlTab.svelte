@@ -323,6 +323,10 @@
             </svg>
             <input
               bind:value={line.name}
+              on:input={() => {
+                lines[idx].name = line.name;
+                lines = lines;
+              }}
               placeholder="Path {idx + 1}"
               class="pl-1.5 rounded-md bg-neutral-100 dark:bg-neutral-950 dark:border-neutral-700 border-[0.5px] focus:outline-none text-sm font-semibold"
             />
